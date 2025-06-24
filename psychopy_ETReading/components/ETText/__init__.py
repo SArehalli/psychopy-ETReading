@@ -131,17 +131,21 @@ class ETTextComponent(BaseVisualComponent):
         code =  ("words = {text}.split()\n"
                  "pad = {padWidth}\n"
                  "cur_pos = {pos}\n\n"
-                 "class WordList:\n"
+                 "class WordSeq:\n"
                  "    words = []\n"
                  "    status = None\n"
-                 "{name} = WordList()\n\n"
+                 "    def setAutoDraw(self, b):\n"
+                 "        for word in self.words:\n"
+                 "            word.setAutoDraw(b)\n"
+                 "\n"
+                 "{name} = WordSeq()\n\n"
                  "for word in words:\n"
                  "    word_{name} = visual.TextStim(win=win, name='{name}',\n"
                  "        text=word,\n"
                  "        font={font},\n"
                  "        pos=cur_pos, draggable=False, height={letterHeight}, wrapWidth=None, ori={ori}, \n"
                  "        color={color}, colorSpace={colorSpace}, opacity={opacity}, \n"
-                 "        anchorHoriz={align}, alignHoriz={align},\n"
+                 "        anchorHoriz={align}, alignText={align},\n"
                  "        languageStyle={languageStyle},\n"
                  "        depth={depth:.1f});\n"
                  "    {name}.words.append(word_{name})\n"
@@ -161,7 +165,7 @@ class ETTextComponent(BaseVisualComponent):
             code += debug_code
         buff.writeIndentedLines(code.format(**inits))
 
-    def writeFrameCode(self, buff):
+    def REMOVEwriteFrameCode(self, buff):
         """
         Write the Python code which is called each frame for this Component.
 
@@ -180,7 +184,18 @@ class ETTextComponent(BaseVisualComponent):
             # dedent after!
             code = (
                 "for word in {name}.words:\n"
-                "    word.autoDraw = True\n"
+                "    word.setAutoDraw(True)\n"
             )
             buff.writeIndentedLines(code.format(**self.params))
+            buff.setIndentLevel(-dedent, relative=True)
+
+        # test for stop (only if there was some setting for duration or stop)
+        dedent = self.writeStopTestCode(buff)
+        if dedent:
+            code = (
+                "for word in {name}.words:\n"
+                "    word.setAutoDraw(False)\n"
+            )
+            buff.writeIndented(code.format(**self.params))
+            # to get out of the if statement
             buff.setIndentLevel(-dedent, relative=True)

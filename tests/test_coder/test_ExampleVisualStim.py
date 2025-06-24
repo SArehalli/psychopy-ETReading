@@ -4,7 +4,7 @@ Tests for the ExampleVisualStim class, essentially showcases how to implement ba
 
 
 from psychopy import visual
-from psychopy_plugin_template.visual.exampleVisualStim import ExampleVisualStim
+from psychopy_ETReading.components.ETText import ETTextComponent
 
 
 class TestExampleVisualStim:
@@ -31,8 +31,8 @@ class TestExampleVisualStim:
         This method is run before each test starts. Use it to setup things which you want to be fresh at the start of each test, like creating the stimulus object.
         """
         # create an instance of the class to test
-        self.obj = ExampleVisualStim(
-            self.win, units="height", name="testExampleStim", autoLog=True
+        self.obj = ETTextComponent(
+            self.win, text="hello", name="testExampleStim", autoLog=True
         )
     
     def teardown_method(self):

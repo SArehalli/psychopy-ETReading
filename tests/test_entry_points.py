@@ -11,7 +11,7 @@ def test_entry_points():
     # activate all plugins
     activatePlugins()
     # iterate through entry points
-    for ep in importlib.metadata.distribution("psychopy-plugin-template").entry_points:
+    for ep in importlib.metadata.distribution("psychopy-ETReading").entry_points:
         # get module
         mod = importlib.import_module(ep.group)
         # get target from module

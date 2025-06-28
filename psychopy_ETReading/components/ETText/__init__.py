@@ -55,20 +55,20 @@ class ETTextComponent(BaseVisualComponent):
             label=_translate("Text"))
         self.params['font'] = Param(
             font, valType='str', inputType="font", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
+            updates='constant', allowedUpdates=['constant'],  # copy the list
             hint=_translate("The font name (e.g. Comic Sans)"),
             label=_translate("Font"))
         del self.params['size']  # because you can't specify width for text
         self.params['letterHeight'] = Param(
             letterHeight, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
+            updates='constant', allowedUpdates=['constant'],  # copy the list
             hint=_translate("Specifies the height of the letter (the width"
                             " is then determined by the font)"),
             label=_translate("Letter height"))
 
         self.params['padWidth'] = Param(
             padWidth, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
+            updates='constant', allowedUpdates=['constant'],  # copy the list
             hint=_translate("Space between words (i.e., width of the space character)"),
             label=_translate("Word Padding Width"))
 
@@ -128,9 +128,7 @@ class ETTextComponent(BaseVisualComponent):
         if self.params['wrapWidth'].val in ['', 'None', 'none']:
             inits['wrapWidth'] = 'None'
 
-        code =  ("words = {text}.split()\n"
-                 "pad = {padWidth}\n"
-                 "cur_pos = {pos}\n\n"
+        code =  (
                  "class WordSeq:\n"
                  "    words = []\n"
                  "    status = None\n"
@@ -138,31 +136,40 @@ class ETTextComponent(BaseVisualComponent):
                  "        for word in self.words:\n"
                  "            word.setAutoDraw(b)\n"
                  "\n"
-                 "{name} = WordSeq()\n\n"
-                 "for word in words:\n"
-                 "    word_{name} = visual.TextStim(win=win, name='{name}',\n"
-                 "        text=word,\n"
-                 "        font={font},\n"
-                 "        pos=cur_pos, draggable=False, height={letterHeight}, wrapWidth=None, ori={ori}, \n"
-                 "        color={color}, colorSpace={colorSpace}, opacity={opacity}, \n"
-                 "        anchorHoriz={align}, alignText={align},\n"
-                 "        languageStyle={languageStyle},\n"
-                 "        depth={depth:.1f});\n"
-                 "    {name}.words.append(word_{name})\n"
-                 "    cur_pos = (cur_pos[0] + word_{name}.boundingBox[0] + pad, cur_pos[1])\n"
-                 "    x, y = word_{name}.posPix\n"
-                 "    dx, dy = word_{name}.boundingBox\n"
-                 "    wordroi = (x, y + dy//2, x + dx + pad, y - dy//2)\n"
-                 "    {currentloop}.addData('{name}.' + word + '.loc', wordroi)\n" 
-                 "    print(word, wordroi)\n")
+                 "    def setText(self, t):\n"
+                 "        words = t.split()\n"
+                 "        self.words = []\n"
+                 "        pad = {padWidth}\n"
+                 "        cur_pos = {pos}\n\n"
+                 "        for i,word in enumerate(words):\n"
+                 "            word_{name} = visual.TextStim(win=win, name='{name}',\n"
+                 "                text=word,\n"
+                 "                font={font},\n"
+                 "                pos=cur_pos, draggable=False, height={letterHeight}, wrapWidth=None, ori={ori}, \n"
+                 "                color={color}, colorSpace={colorSpace}, opacity={opacity}, \n"
+                 "                anchorHoriz={align}, alignText={align},\n"
+                 "                languageStyle={languageStyle},\n"
+                 "                depth={depth:.1f});\n"
+                 "            {name}.words.append(word_{name})\n"
+                 "            cur_pos = (cur_pos[0] + word_{name}.boundingBox[0] + pad, cur_pos[1])\n"
+                 "            x, y = word_{name}.posPix\n"
+                 "            dx, dy = word_{name}.boundingBox\n"
+                 "            wordroi = (x, y + dy//2, x + dx + pad, y - dy//2)\n"
+                 "            {currentloop}.addData('{name}.' + str(i)  + '.' +  word + '.loc', wordroi)\n" 
+                 "            print(word, wordroi)\n")
         inits["depth"] = -self.getPosInRoutine()
         inits["currentloop"] = self.currentLoop
         if self.params["debug"]:
-            debug_code = ("    box_{name} = visual.Rect(win=win, name='{name}',\n"
-                          "        pos = (x, y + dy//2), size=(dx + pad, dy),\n"
-                          "        lineColor='red', fillColor=None, anchor='top-left')\n"
-                          "    {name}.words.append(box_{name})\n")
+            debug_code = ("            box_{name} = visual.Rect(win=win, name='{name}',\n"
+                          "                pos = (x, y + dy//2), size=(dx + pad, dy),\n"
+                          "                lineColor='red', fillColor=None, anchor='top-left')\n"
+                          "            {name}.words.append(box_{name})\n")
             code += debug_code
+        code += (
+                 "\n"
+                 "{name} = WordSeq()\n"
+                 "{name}.setText({text})\n\n")
+
         buff.writeIndentedLines(code.format(**inits))
 
     def REMOVEwriteFrameCode(self, buff):

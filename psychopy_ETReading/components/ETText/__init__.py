@@ -155,7 +155,7 @@ class ETTextComponent(BaseVisualComponent):
                  "            x, y = word_{name}.posPix\n"
                  "            dx, dy = word_{name}.boundingBox\n"
                  "            wordroi = (x, y + dy//2, x + dx + pad, y - dy//2)\n"
-                 "            {currentloop}.addData('{name}.' + str(i)  + '.' +  word + '.loc', wordroi)\n" 
+                 "            {currentloop}.addData('{name}.' + str(i) + '.loc', wordroi)\n" 
                  "            print(word, wordroi)\n")
         inits["depth"] = -self.getPosInRoutine()
         inits["currentloop"] = self.currentLoop
@@ -171,38 +171,3 @@ class ETTextComponent(BaseVisualComponent):
                  "{name}.setText({text})\n\n")
 
         buff.writeIndentedLines(code.format(**inits))
-
-    def REMOVEwriteFrameCode(self, buff):
-        """
-        Write the Python code which is called each frame for this Component.
-
-        Parameters
-        ----------
-        buff : 
-            String buffer to write to, i.e. the .py file
-        """
-
-        # update any parameters which need updating
-        self.writeParamUpdates(buff, updateType="set every frame")
-
-        dedent = self.writeStartTestCode(buff)
-        # we only want the following code written if an if loop actually was opened, not if the start time is None! so make sure to use dedent as a boolean to avoid writing broken code
-        if dedent:
-            # dedent after!
-            code = (
-                "for word in {name}.words:\n"
-                "    word.setAutoDraw(True)\n"
-            )
-            buff.writeIndentedLines(code.format(**self.params))
-            buff.setIndentLevel(-dedent, relative=True)
-
-        # test for stop (only if there was some setting for duration or stop)
-        dedent = self.writeStopTestCode(buff)
-        if dedent:
-            code = (
-                "for word in {name}.words:\n"
-                "    word.setAutoDraw(False)\n"
-            )
-            buff.writeIndented(code.format(**self.params))
-            # to get out of the if statement
-            buff.setIndentLevel(-dedent, relative=True)
